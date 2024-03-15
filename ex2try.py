@@ -7,6 +7,7 @@ class Node:
         self.key = key
         self.left = None
         self.right = None
+        self.balance = 0  # Added balance attribute to the node
 
 class BSearchTree:
     def __init__(self):
@@ -16,7 +17,7 @@ class BSearchTree:
         if search:
             return self.search(self.root, key)
         else:
-            self.root = self.recurisve(self.root, key)
+            self.root = self.insert(self.root, key)
             return None
 
     def insert(self, node, key):
@@ -25,14 +26,28 @@ class BSearchTree:
         
         if key < node.key:
             node.left = self.insert(node.left, key)
+            node.balance -= 1  # Update balance when inserting into the left subtree
         elif key > node.key:
             node.right = self.insert(node.right, key)
-
-
+            node.balance += 1  # Update balance when inserting into the right subtree
         
+        # Check for Case 1: Pivot does not exist
+        assert abs(node.balance) <= 1, f"Case #1: Pivot not detected. Node {node.key} balance: {node.balance}"
         
-        return node
+        return self.rebalance(node)
 
+    def rebalance(self, node):
+        if abs(node.balance) <= 1:
+            return node
+
+        # Check for Case 2: Pivot exists but node is being inserted into the shorter subtree
+        if node.balance < 0:
+            assert node.balance >= -1, f"Case #2: A pivot exists, and a node was added to the shorter subtree. Node {node.key} balance: {node.balance}"
+            return node
+
+        # Case 3 not supported
+        assert False, "Case #3 not supported"
+    
     def search(self, node, key):
         if node is None or node.key == key:
             return node is not None
@@ -42,7 +57,6 @@ class BSearchTree:
         else:
             return self.search(node.right, key)
     
-    #used chatgpt for these two fucntions
     def measure_balance(self):
         return self.measure_balance_recursive(self.root)
     
@@ -82,6 +96,29 @@ def measure_performance(tree, tasks):
 
 if __name__ == "__main__":
     bst = BSearchTree()
+
+    # Test Case 1: Adding a node results in Case 1 (pivot does not exist)
+    bst.process(10)
+    bst.process(5)
+    bst.process(15)
+    bst.process(3)
+
+    # Test Case 2: Adding a node results in Case 2 (a pivot exists)
+    bst.process(20)
+    bst.process(25)
+    bst.process(30)
+    bst.process(35)
+    bst.process(40)
+
+    # Test Case 3: Adding a node results in Case 3 (not supported)
+    try:
+        bst.process(50)
+    except AssertionError as e:
+        assert str(e) == "Case #3 not supported", f"Unexpected error: {e}"
+
+    # Test Case 4: Adding a node does not result in any case
+    bst.process(2)
+
     tasks = generate_search_tasks()
     search_times, max_balances = measure_performance(bst, tasks)
 
@@ -90,3 +127,4 @@ if __name__ == "__main__":
     plt.xlabel('Absolute Balance')
     plt.ylabel('Search Time (seconds)')
     plt.show()
+

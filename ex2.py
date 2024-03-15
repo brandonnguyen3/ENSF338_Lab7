@@ -28,9 +28,13 @@ class BSearchTree:
         elif key > node.key:
             node.right = self.insert(node.right, key)
 
+        pivotNnode = self.identify_pivot(node)
+        if not pivotNode:
+            print("Case 1: Pivot not detected")
+        else:
 
-        
-        
+            print("Case 2: Pivot detected and a anode was added to the shorter subtree")
+
         return node
 
     def search(self, node, key):
@@ -54,6 +58,14 @@ class BSearchTree:
         right_height = self.measure_balance_recursive(node.right)
         
         return abs(left_height - right_height)
+    
+    def identify_pivot(self, node):
+        left_height = self.measure_balance_recursive(node.left)
+        right_height = self.measure_balance_recursive(node.right)
+        if abs(left_height - right_height) > 1:
+            return node
+        else:
+            return None
 
 
 def generate_search_tasks():
@@ -90,3 +102,5 @@ if __name__ == "__main__":
     plt.xlabel('Absolute Balance')
     plt.ylabel('Search Time (seconds)')
     plt.show()
+
+
