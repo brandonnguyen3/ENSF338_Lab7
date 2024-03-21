@@ -1,106 +1,127 @@
 import random
-import time
+import timeit
 import matplotlib.pyplot as plt
+import sys
+sys.setrecursionlimit(20000)
 
+# Tree node definition
 class Node:
-    def __init__(self, key):
-        self.key = key
-        self.left = None
-        self.right = None
+    def __init__(self, data, parent=None, left=None, right=None):
+        self.parent = parent
+        self.data = data
+        self.left = left
+        self.right = right
+        self.height = 1  # Initialize height to 1
 
 class BSearchTree:
     def __init__(self):
         self.root = None
 
-    def process(self, key, search=False):
-        if search:
-            return self.search(self.root, key)
-        else:
-            self.root = self.recurisve(self.root, key)
-            return None
+    def insert(self, data):
+        if self.root is None:
+            self.root = Node(data)
+            return
 
-    def insert(self, node, key):
-        if node is None:
-            return Node(key)
+        current = self.root
+        parent = None
+
+        while current is not None:
+            parent = current
+            if data <= current.data:
+                current = current.left
+            else:
+                current = current.right
+
+        new_node = Node(data, parent)
+
+        if data <= parent.data:
+            parent.left = new_node
+        else:
+            parent.right = new_node
+
+        # Update heights after insertion
+        self.update_height(new_node)
         
-        if key < node.key:
-            node.left = self.insert(node.left, key)
-        elif key > node.key:
-            node.right = self.insert(node.right, key)
+        # Identify pivot node
+        pivot_node = self.find_pivot_node(new_node)
 
-        pivotNnode = self.identify_pivot(node)
-        if not pivotNode:
-            print("Case 1: Pivot not detected")
+        # Check for cases
+        if pivot_node is None:
+            print("Case #1: Pivot not detected")
+            self.update_balances(new_node)
         else:
+            if self.is_shorter_subtree(new_node, pivot_node):
+                print("Case #2: A pivot exists, and a node was added to the shorter subtree")
+                self.update_balances(new_node)
 
-            print("Case 2: Pivot detected and a anode was added to the shorter subtree")
+        #print(f"Balance of Node {data}: {self.get_balance(new_node)}")
 
-        return node
+    def find_pivot_node(self, node):
+        while node:
+            balance = self.get_balance(node)
+            if balance != 0:
+                return node
+            node = node.parent
+        return None
 
-    def search(self, node, key):
-        if node is None or node.key == key:
-            return node is not None
-        
-        if key < node.key:
-            return self.search(node.left, key)
+    def is_shorter_subtree(self, node, pivot):
+        if pivot is None:
+            return False
+        pivot_balance = self.get_balance(pivot)
+        if pivot_balance == 0:
+            return False
+        if node.data <= pivot.data:
+            return pivot_balance < 0
         else:
-            return self.search(node.right, key)
-    
-    #used chatgpt for these two fucntions
-    def measure_balance(self):
-        return self.measure_balance_recursive(self.root)
-    
-    def measure_balance_recursive(self, node):
+            return pivot_balance > 0
+
+    def update_balances(self, node):
+        while node:
+            node.height = max(self.get_height(node.left), self.get_height(node.right)) + 1
+            node = node.parent
+
+    def search(self, data):
+        current = self.root
+        while current is not None:
+            if data == current.data:
+                return current
+            elif data <= current.data:
+                current = current.left
+            else:
+                current = current.right
+        return None
+
+    def get_height(self, node):
         if node is None:
             return 0
-        
-        left_height = self.measure_balance_recursive(node.left)
-        right_height = self.measure_balance_recursive(node.right)
-        
-        return abs(left_height - right_height)
+        return node.height
+
+    def update_height(self, node):
+        while node:
+            node.height = max(self.get_height(node.left), self.get_height(node.right)) + 1
+            node = node.parent
+
+    def get_balance(self, node):
+        if not node:
+            return 0
+        return self.get_height(node.left) - self.get_height(node.right)
     
-    def identify_pivot(self, node):
-        left_height = self.measure_balance_recursive(node.left)
-        right_height = self.measure_balance_recursive(node.right)
-        if abs(left_height - right_height) > 1:
-            return node
-        else:
-            return None
-
-
-def generate_search_tasks():
-    tasks = []
-    integers = list(range(1, 1001))
-    for _ in range(1000):
-        random.shuffle(integers)
-        tasks.append(integers.copy())
-    return tasks
+    def findMaxBalance(self, node):
+        if not node:
+            return 0
+        return max(self.get_balance(node), self.findMaxBalance(node.left), self.findMaxBalance(node.right))
 
 
 
-def measure_performance(tree, tasks):
-    search_times = []
-    max_balances = []
-    for task in tasks:
-        start_time = time.time()
-        for integer in task:
-            tree.process(integer, search=True)
-        end_time = time.time()
-        search_time = end_time - start_time
-        balance = tree.measure_balance()
-        search_times.append(search_time)
-        max_balances.append(balance)
-    return search_times, max_balances
-
-if __name__ == "__main__":
+# Test Case 1: (Pivot not detected)
+def test_case_1():
     bst = BSearchTree()
-    tasks = generate_search_tasks()
-    search_times, max_balances = measure_performance(bst, tasks)
+    for data in [50, 30, 70]:
+        bst.insert(data)
+    bst.insert(80)
 
-    plt.scatter(max_balances, search_times, alpha=0.5)
-    plt.title('Scatterplot of Absolute Balance vs. Search Time')
-    plt.xlabel('Absolute Balance')
-    plt.ylabel('Search Time (seconds)')
-    plt.show()
+# Call the test case function
+test_case_1()
+
 
 
