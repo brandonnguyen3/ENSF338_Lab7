@@ -1,117 +1,106 @@
+#Exercise 1 (Complete)
+
 import random
-import timeit
+import time
 import matplotlib.pyplot as plt
-import sys
-sys.setrecursionlimit(20000)
-
-# Tree node definition
+# Used chat gpt for some functions 
 class Node:
-    def __init__(self, data, parent=None, left=None, right=None):
-        self.parent = parent
-        self.data = data
-        self.left = left
-        self.right = right
-        self.height = 1  # Initialize height to 1
+    # Constructor \
+    def __init__(self, key):
+        self.key = key
+        self.left = None
+        self.right = None
+        self.height = 1  #Initializes height to 1
+ 
+#insert function
+def insert(node, key):
+    # If the tree is empty then return a new node
+    if node is None:
+        return Node(key)
+ 
+    #Uses recursion
+    if key < node.key:
+        node.left = insert(node.left, key)
+    elif key > node.key:
+        node.right = insert(node.right, key)
+    else:
+        return node
+ 
+    # Update the height of the current node
+    node.height = 1 + max(get_height(node.left), get_height(node.right))
+ 
+    return node
+ 
+#Search function
+def search(root, key):
+    #Checks case that root is null or key is present at root
+    if root is None or root.key == key:
+        return root
+ 
+    #Key is greater than the root value
+    if root.key < key:
+        return search(root.right, key)
+ 
+    #Key is less than the root value
+    return search(root.left, key)
+ 
+#gets the height of a node. 
+def get_height(node):
+    if node is None:
+        return 0
+    return node.height
+ 
+#Calculates the height. 
+def get_balance(node):
+    if node is None:
+        return 0
+    return get_height(node.right) - get_height(node.left)
 
-class BSearchTree:
-    def __init__(self):
-        self.root = None
-
-    def insert(self, data):
-        if self.root is None:
-            self.root = Node(data)
-            return
-
-        current = self.root
-        parent = None
-
-        while current is not None:
-            parent = current
-            if data <= current.data:
-                current = current.left
-            else:
-                current = current.right
-
-        newnode = Node(data, parent)
-
-        if data <= parent.data:
-            parent.left = newnode
-        else:
-            parent.right = newnode
-
-        self.update_height(newnode)  # Update heights after insertion
-
-    def search(self, data):
-        current = self.root
-        while current is not None:
-            if data == current.data:
-                return current
-            elif data <= current.data:
-                current = current.left
-            else:
-                current = current.right
-        return None
-
-    def get_height(self, node):
-        if node is None:
-            return 0
-        return node.height
-
-    def update_height(self, node):
-        while node:
-            node.height = max(self.get_height(node.left), self.get_height(node.right)) + 1
-            node = node.parent
-
-    def get_balance(self, node):
-        if not node:
-            return 0
-        return self.get_height(node.left) - self.get_height(node.right)
+#Used chatgpt to generate search tasks.  
+#Function to generate random search tasks
+def generate_search_tasks():
+    tasks = []
+    integers = list(range(1, 1001))  # First 1000 integers
+    for _ in range(1000):
+        random.shuffle(integers)
+        tasks.append(integers.copy())
+    return tasks
+ 
+# Function to measure performance for each search task
+def measure_performance(tasks):
+    results = []
+    for task in tasks:
+        root = None
+        for key in task:
+            root = insert(root, key)
+        
+        search_times = []
+        for key in task:
+            start_time = time.time()
+            search(root, key)
+            end_time = time.time()
+            search_times.append(end_time - start_time)
+        
+        avg_search_time = sum(search_times) / len(search_times)
+        max_balance = max(abs(get_balance(root.left)), abs(get_balance(root.right)))
+        results.append((max_balance, avg_search_time))
     
-    def findMaxBalance(self, node):
-        if not node:
-            return 0
-        return max(self.get_balance(node), self.findMaxBalance(node.left), self.findMaxBalance(node.right))
-
-
-
-
-# Generate the list of the first 1000 integers
-integersList = list(range(1, 1001))
-
-# Generate 1000 different tasks by shuffling the list 1000 times
-search_tasks = []
-for _ in range(1000):
-    shuffled_list = list(integersList)  
-    random.shuffle(shuffled_list)
-    search_tasks.append(shuffled_list)
-
-
-avgPerformance = []
-largestBalance = []
-
-# Create an instance of Binary Search Tree
-bst = BSearchTree()
-
-# Measure performance for each task
-for task in search_tasks:
-    # Insert integers into the tree
-    for integer in task:
-        bst.insert(integer)
+    return results
+ 
+# Main function
+if __name__ == "__main__":
+    tasks = generate_search_tasks()
+    results = measure_performance(tasks)
     
-    # Measure search performance using timeit
-    search_time = timeit.timeit(lambda: [bst.search(integer) for integer in task], number=1)
-
-    # Measure largest absolute balance value
-    largest_balance = bst.findMaxBalance(bst.root)
-
-    # Append performance metrics to the respective lists
-    avgPerformance.append(search_time / len(task))
-    largestBalance.append(largest_balance)
-
-# Plot scatterplot
-plt.scatter(largestBalance, avgPerformance, alpha=0.5)
-plt.title('Scatterplot of Absolute Balance vs. Average Search Time')
-plt.xlabel('Largest Absolute Balance')
-plt.ylabel('Average Search Time (seconds)')
-plt.show()
-
+    # Extracting data for scatter plot
+    abs_balances = [result[0] for result in results]
+    search_times = [result[1] for result in results]
+    
+    # Scatter plot
+    plt.figure(figsize=(8, 6))
+    plt.scatter(abs_balances, search_times, alpha=0.6)
+    plt.xlabel('Absolute Balance')
+    plt.ylabel('Search Time')
+    plt.title('Absolute Balance vs. Search Time')
+    plt.grid(True)
+    plt.show()
