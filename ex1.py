@@ -81,13 +81,13 @@ integersList = list(range(1, 1001))
 # Generate 1000 different tasks by shuffling the list 1000 times
 search_tasks = []
 for _ in range(1000):
-    shuffled_list = list(integersList)  # Copy the original list to shuffle
+    shuffled_list = list(integersList)  
     random.shuffle(shuffled_list)
     search_tasks.append(shuffled_list)
 
-# Initialize lists to store performance metrics
-avg_performance = []
-largest_balance_values = []
+
+avgPerformance = []
+largestBalance = []
 
 # Create an instance of Binary Search Tree
 bst = BSearchTree()
@@ -105,11 +105,11 @@ for task in search_tasks:
     largest_balance = bst.findMaxBalance(bst.root)
 
     # Append performance metrics to the respective lists
-    avg_performance.append(search_time / len(task))
-    largest_balance_values.append(largest_balance)
+    avgPerformance.append(search_time / len(task))
+    largestBalance.append(largest_balance)
 
 # Plot scatterplot
-plt.scatter(largest_balance_values, avg_performance, alpha=0.5)
+plt.scatter(largestBalance, avgPerformance, alpha=0.5)
 plt.title('Scatterplot of Absolute Balance vs. Average Search Time')
 plt.xlabel('Largest Absolute Balance')
 plt.ylabel('Average Search Time (seconds)')
